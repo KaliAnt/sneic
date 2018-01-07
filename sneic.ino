@@ -3,6 +3,11 @@
 #define LATCH 12
 #define DATA 10
 #define CLOCK 13
+//button pins
+#define LEFT 6
+#define RIGHT 3
+#define UP 4
+#define DOWN 5
 
 OliLedMatrix ledMatrix(LATCH, DATA, CLOCK);
 
