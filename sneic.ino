@@ -6,12 +6,29 @@
 
 OliLedMatrix ledMatrix(LATCH, DATA, CLOCK);
 
+void rectangleScreen() {
+  unsigned long time = millis();
+  
+  ledMatrix.clear();
+  
+  if (time%800 < 100)
+      ledMatrix.drawRectangle(3,3,2,2); 
+  else if (time%800 < 200)
+      ledMatrix.drawRectangle(2,2,4,4);
+  else if (time%800 < 300)
+      ledMatrix.drawRectangle(1,1,6,6);
+  else
+      ledMatrix.drawRectangle(0,0,8,8);
+      
+  ledMatrix.display();
+}
+
 void setup() {
   // put your setup code here, to run once:
 
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
+  rectangleScreen();
 
 }
