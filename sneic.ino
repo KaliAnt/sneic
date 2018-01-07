@@ -15,7 +15,7 @@
 
 OliLedMatrix ledMatrix(LATCH, DATA, CLOCK);
 
-typedef struct dot{
+typedef struct dotCoordinate{
   uint8_t x;
   uint8_t y;
 }dot_t;
@@ -25,6 +25,9 @@ dot_t sneic[64];
 uint8_t orientation;
 uint8_t gamestatus = 0; //press any key for the game to start;
 uint8_t sneicLen;
+unsigned long elapsedTime = millis();
+unsigned long previousTime;
+unsigned long time;
 
 dot_t getRandomPosition() {
   dot_t someDot;
@@ -54,6 +57,40 @@ void displaySneic() {
   }
 }
 
+dot_t getPosition(dot_t dot, uint8_t input) {
+  if(input == LEFT) {
+    dot.x = dot.x-1;
+    if(dot.x<0) dot.x = ARENA_WIDTH-1;
+  }
+  if(input == RIGHT) {
+    dot.x = dot.x+1;
+    if(dot.x>ARENA_WIDTH-1) dot.x = 0;
+  }
+  if(input == UP) {
+    dot.y = dot.y-1;
+    if(dot.y < 0) dot.y = ARENA_HEIGHT-1; 
+  }
+  if(input == DOWN) {
+    dot.y = dot.y+1;
+    if(dot.y > ARENA_HEIGHT-1) dot.y = 0;
+  }
+  return dot;
+}
+
+void moveSneic(uint8_t input) {
+  if(input == orientation) {
+    return;
+  } else {
+    int i = 0;
+    for(i=1; i<sneicLen; i++) {
+      sneic[i] = sneic[i-1];
+    }
+    sneic[0] = getPosition(sneic[0],input);
+    ledMatrix.drawPixel(sneic[0].x,sneic[0].y);
+    orientation = input;
+  }
+}
+
 void endGame() {
   gamestatus = 0; //game has ended
 }
@@ -80,8 +117,7 @@ uint8_t readInput() {
 }
 
 void rectangleScreen() {
-  unsigned long time = millis();
-  
+  time = millis();
   ledMatrix.clear();
   
   if (time%800 < 100)
@@ -96,30 +132,40 @@ void rectangleScreen() {
   ledMatrix.display();
 }
 
-void setup() {
-  // put your setup code here, to run once:
-  pinMode(LEFT, INPUT);
-  pinMode(RIGHT, INPUT);
-  pinMode(UP, INPUT);
-  pinMode(DOWN, INPUT);
-}
-
-void loop() {
-//  rectangleScreen();
-  if(gamestatus == 0) {
-    uint8_t input = readInput(); 
+void pressAnyKey() {
+  uint8_t input = readInput(); 
     if(input != 0) {
       ledMatrix.clear();
       newGame();
     } else {
       rectangleScreen();
-      //ledMatrix.display();
-      //delay(1000);
+    }
+}
+
+void setup() {
+  
+  pinMode(LEFT, INPUT);
+  pinMode(RIGHT, INPUT);
+  pinMode(UP, INPUT);
+  pinMode(DOWN, INPUT);
+  
+}
+
+void loop() {
+  time = millis();
+  if(gamestatus == 0) {
+    pressAnyKey();//wait for player to start the game
+    elapsedTime = 0;
+    previousTime = 0;
+  } else { //game has started
+    elapsedTime+= time - previousTime;
+    if(elapsedTime > 500) {
+      uint8_t input = readInput();
+      ledMatrix.clear();
+      moveSneic(input);
+      displaySneic();
     }
   }
-  if(gamestatus == 1) {
-    uint8_t input = readInput();
-    displaySneic();
-    ledMatrix.display();
-  }
+  previousTime = 0;
+  ledMatrix.display();
 }
