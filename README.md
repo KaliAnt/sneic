@@ -14,7 +14,8 @@ DATA 10
 CLOCK 13
 
 Button pins:
-LEFT 
-RIGHT
-UP
-DOWN
+LEFT 6
+RIGHT 3
+UP 4
+DOWN 5
+
