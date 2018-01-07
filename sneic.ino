@@ -52,23 +52,23 @@ void newGame() {
 
 void displaySneic() {
   int i;
-  for(i = 0; i<sneicLen; ++i) {
+  for(i = 0; i<sneicLen; i++) {
     ledMatrix.drawPixel(sneic[i].x,sneic[i].y);
   }
 }
 
 dot_t getPosition(dot_t dot, uint8_t input) {
   if(input == LEFT) {
-    dot.x = dot.x-1;
-    if(dot.x<0) dot.x = ARENA_WIDTH-1;
+    if(dot.x==0) { dot.x = ARENA_WIDTH-1; }
+    else { dot.x = dot.x-1;}
   }
   if(input == RIGHT) {
     dot.x = dot.x+1;
     if(dot.x>ARENA_WIDTH-1) dot.x = 0;
   }
   if(input == UP) {
-    dot.y = dot.y-1;
-    if(dot.y < 0) dot.y = ARENA_HEIGHT-1; 
+    if(dot.y==0) { dot.y = ARENA_WIDTH-1; }
+    else { dot.y = dot.y-1; }
   }
   if(input == DOWN) {
     dot.y = dot.y+1;
@@ -82,9 +82,12 @@ void moveSneic(uint8_t input) {
     return;
   } else {
     int i = 0;
-    for(i=1; i<sneicLen; i++) {
+    ledMatrix.clear();
+    for(i=1; i<sneicLen; i++) { //prev dot becomes the next one
       sneic[i] = sneic[i-1];
+      ledMatrix.drawPixel(sneic[i].x,sneic[i].y);
     }
+    ledMatrix.drawPixel(sneic[0].x,sneic[0].y);
     sneic[0] = getPosition(sneic[0],input);
     ledMatrix.drawPixel(sneic[0].x,sneic[0].y);
     orientation = input;
@@ -161,7 +164,7 @@ void loop() {
     elapsedTime+= time - previousTime;
     if(elapsedTime > 500) {
       uint8_t input = readInput();
-      ledMatrix.clear();
+      //ledMatrix.clear();
       moveSneic(input);
       displaySneic();
     }
