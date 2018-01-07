@@ -13,6 +13,13 @@
 
 OliLedMatrix ledMatrix(LATCH, DATA, CLOCK);
 
+typedef struct dot{
+  int x;
+  int y;
+}dot_t;
+
+int orientation;
+
 uint8_t readInput() {
   int left = digitalRead(LEFT);
   int right = digitalRead(RIGHT);
