@@ -10,15 +10,53 @@
 #define UP 4
 #define DOWN 5
 //input values
+#define ARENA_WIDTH 8
+#define ARENA_HEIGHT 8
 
 OliLedMatrix ledMatrix(LATCH, DATA, CLOCK);
 
 typedef struct dot{
-  int x;
-  int y;
+  uint8_t x;
+  uint8_t y;
 }dot_t;
 
-int orientation;
+dot_t sneic[64];
+
+uint8_t orientation;
+uint8_t gamestatus = 0; //press any key for the game to start;
+uint8_t sneicLen;
+
+dot_t getRandomPosition() {
+  dot_t someDot;
+  someDot.x =  random(ARENA_WIDTH-1);
+  someDot.y = random(ARENA_HEIGHT-1);
+  return someDot;
+}
+
+void newGame() {
+  gamestatus = 1; //game has started
+  sneic[0].x = 4;
+  sneic[0].y = 3;
+  sneic[1].x = 3;
+  sneic[1].y = 3;
+  sneicLen = 2; 
+  int i;
+  for(i = 2; i<64; i++) {
+    sneic[i].x = 0;
+    sneic[i].y = 0;
+  }
+}
+
+void displaySneic() {
+  int i;
+  for(i = 0; i<sneicLen; ++i) {
+    ledMatrix.drawPixel(sneic[i].x,sneic[i].y);
+  }
+}
+
+void endGame() {
+  gamestatus = 0; //game has ended
+}
 
 uint8_t readInput() {
   int left = digitalRead(LEFT);
@@ -67,8 +105,21 @@ void setup() {
 }
 
 void loop() {
-  rectangleScreen();
-  uint8_t input = readInput();
-  
-
+//  rectangleScreen();
+  if(gamestatus == 0) {
+    uint8_t input = readInput(); 
+    if(input != 0) {
+      ledMatrix.clear();
+      newGame();
+    } else {
+      rectangleScreen();
+      //ledMatrix.display();
+      //delay(1000);
+    }
+  }
+  if(gamestatus == 1) {
+    uint8_t input = readInput();
+    displaySneic();
+    ledMatrix.display();
+  }
 }
