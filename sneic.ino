@@ -38,6 +38,7 @@ dot_t getRandomPosition() {
 
 void newGame() {
   gamestatus = 1; //game has started
+  orientation=RIGHT;
   sneic[0].x = 4;
   sneic[0].y = 3;
   sneic[1].x = 3;
@@ -52,6 +53,7 @@ void newGame() {
 
 void displaySneic() {
   int i;
+  ledMatrix.clear();
   for(i = 0; i<sneicLen; i++) {
     ledMatrix.drawPixel(sneic[i].x,sneic[i].y);
   }
@@ -82,14 +84,11 @@ void moveSneic(uint8_t input) {
     return;
   } else {
     int i = 0;
-    ledMatrix.clear();
+   // ledMatrix.clear();
     for(i=1; i<sneicLen; i++) { //prev dot becomes the next one
       sneic[i] = sneic[i-1];
-      ledMatrix.drawPixel(sneic[i].x,sneic[i].y);
     }
-    ledMatrix.drawPixel(sneic[0].x,sneic[0].y);
     sneic[0] = getPosition(sneic[0],input);
-    ledMatrix.drawPixel(sneic[0].x,sneic[0].y);
     orientation = input;
   }
 }
@@ -164,8 +163,13 @@ void loop() {
     elapsedTime+= time - previousTime;
     if(elapsedTime > 500) {
       uint8_t input = readInput();
-      //ledMatrix.clear();
-      moveSneic(input);
+      if(input==0) {
+        moveSneic(orientation);
+        orientation = input; 
+      } else {
+        moveSneic(input);
+        orientation = input;
+      }
       displaySneic();
     }
   }
