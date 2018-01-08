@@ -28,8 +28,10 @@ uint8_t gamestatus = 0; //press any key for the game to start;
 uint8_t sneicLen;
 unsigned long elapsedTime = millis();
 unsigned long previousTime;
-unsigned long time;
+unsigned long currentTime;
 int eaten = 0;
+bool canread;
+
 
 dot_t getRandomPosition() {
   dot_t someDot;
@@ -87,42 +89,41 @@ dot_t getPosition(dot_t dot, uint8_t input) {
   return dot;
 }
 
-void moveSneic(uint8_t input) {
-  if(input == orientation) {
-    
-  } else {
+void moveSneic() {
     int i = 0;
-    if(input == 0) input = orientation;
     if(eaten != 0) {
-      sneic[sneicLen] = sneic[sneicLen-1]; //adds a body
+      //sneic[sneicLen] = sneic[sneicLen-1]; //adds a body
       sneicLen++;
       eaten = 0;
     }
-    for(i=1; i<sneicLen; i++) { //prev dot becomes the next one
+    for(i=sneicLen-1; i>0; i--) { //prev dot becomes the next one
       sneic[i] = sneic[i-1];
     }
-    sneic[0] = getPosition(sneic[0],input);
-    orientation = input;
-  }
+    i=0;
+    sneic[0] = getPosition(sneic[0],orientation);
+
 }
-int check(dot_t dot) { //check collision with body
+
+
+dot_t check(dot_t dot) { //check collision with body
   int i = 0;
   for(i = 0; i<sneicLen; i++) {
-    if((dot.x == sneic[0].x) && (dot.y == sneic[0].y)) { //collision
-      return -1; 
+    if((dot.x == sneic[i].x) && (dot.y == sneic[i].y)) { //collision
+      return sneic[i]; 
     }
-    return 0;
+    return dot;
   }
 }
 
 void eat() {
   if((food.x == sneic[0].x) && (food.y == sneic[0].y)) {
     ledMatrix.erasePixel(food.x, food.y); //erase eaten food
-    sneic[sneicLen] = sneic[sneicLen-1]; // add a new body
-    sneicLen++;
     eaten = 1;
     food = getRandomPosition(); //spawns new food
-    while(check(food) == -1) {
+    dot_t tmp;
+    while(1) {
+      tmp =check(food);
+      if((food.x == tmp.x) && (food.y == tmp.y)) break;
       food = getRandomPosition();
     }
   }
@@ -154,14 +155,14 @@ uint8_t readInput() {
 }
 
 void rectangleScreen() {
-  time = millis();
+  currentTime = millis();
   ledMatrix.clear();
   
-  if (time%800 < 100)
+  if (currentTime%800 < 100)
       ledMatrix.drawRectangle(3,3,2,2); 
-  else if (time%800 < 200)
+  else if (currentTime%800 < 200)
       ledMatrix.drawRectangle(2,2,4,4);
-  else if (time%800 < 300)
+  else if (currentTime%800 < 300)
       ledMatrix.drawRectangle(1,1,6,6);
   else
       ledMatrix.drawRectangle(0,0,8,8);
@@ -189,26 +190,31 @@ void setup() {
 }
 
 void loop() {
-  time = millis();
   if(gamestatus == 0) {
     pressAnyKey();//wait for player to start the game
     elapsedTime = 0;
     previousTime = 0;
   } else { //game has started
-    elapsedTime+= time - previousTime;
+    currentTime = millis();
+    elapsedTime += currentTime - previousTime;
     if(elapsedTime > 500) {
-      uint8_t input = readInput();
-      if(input==0) {
-        moveSneic(orientation);
-        orientation = input; 
-      } else {
-        moveSneic(input);
-        orientation = input;
-      }
+      moveSneic();
       eat();
       displaySneic();
+      elapsedTime = 0;
+      canread = true;
+    }
+    if(canread) {
+       uint8_t input = readInput();
+       if(input != orientation) {
+          if((input == LEFT) && (orientation != RIGHT)) {orientation = input; canread=false;}
+          if((input == RIGHT) && (orientation != LEFT)) {orientation = input; canread=false;}
+          if((input == UP) && (orientation != DOWN)) {orientation = input; canread=false;}
+          if((input == DOWN) && (orientation != UP)) {orientation = input; canread=false;}
+         // canread = false;
+       }
     }
   }
-  previousTime = 0;
+  previousTime = currentTime;
   ledMatrix.display();
 }
