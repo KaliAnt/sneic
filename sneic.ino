@@ -22,12 +22,14 @@ typedef struct dotCoordinate{
 
 dot_t sneic[64];
 
+dot_t food;
 uint8_t orientation;
 uint8_t gamestatus = 0; //press any key for the game to start;
 uint8_t sneicLen;
 unsigned long elapsedTime = millis();
 unsigned long previousTime;
 unsigned long time;
+int eaten = 0;
 
 dot_t getRandomPosition() {
   dot_t someDot;
@@ -44,7 +46,11 @@ void newGame() {
   sneic[1].x = 3;
   sneic[1].y = 3;
   sneicLen = 2; 
+
+  food.x = 5;
+  food.y = 5;
   int i;
+  int eaten=0;
   for(i = 2; i<64; i++) {
     sneic[i].x = 0;
     sneic[i].y = 0;
@@ -53,10 +59,12 @@ void newGame() {
 
 void displaySneic() {
   int i;
-  ledMatrix.clear();
+  ledMatrix.clear(); 
   for(i = 0; i<sneicLen; i++) {
     ledMatrix.drawPixel(sneic[i].x,sneic[i].y);
   }
+  
+  ledMatrix.drawPixel(food.x,food.y); //nomnom
 }
 
 dot_t getPosition(dot_t dot, uint8_t input) {
@@ -81,15 +89,42 @@ dot_t getPosition(dot_t dot, uint8_t input) {
 
 void moveSneic(uint8_t input) {
   if(input == orientation) {
-    return;
+    
   } else {
     int i = 0;
-   // ledMatrix.clear();
+    if(input == 0) input = orientation;
+    if(eaten != 0) {
+      sneic[sneicLen] = sneic[sneicLen-1]; //adds a body
+      sneicLen++;
+      eaten = 0;
+    }
     for(i=1; i<sneicLen; i++) { //prev dot becomes the next one
       sneic[i] = sneic[i-1];
     }
     sneic[0] = getPosition(sneic[0],input);
     orientation = input;
+  }
+}
+int check(dot_t dot) { //check collision with body
+  int i = 0;
+  for(i = 0; i<sneicLen; i++) {
+    if((dot.x == sneic[0].x) && (dot.y == sneic[0].y)) { //collision
+      return -1; 
+    }
+    return 0;
+  }
+}
+
+void eat() {
+  if((food.x == sneic[0].x) && (food.y == sneic[0].y)) {
+    ledMatrix.erasePixel(food.x, food.y); //erase eaten food
+    sneic[sneicLen] = sneic[sneicLen-1]; // add a new body
+    sneicLen++;
+    eaten = 1;
+    food = getRandomPosition(); //spawns new food
+    while(check(food) == -1) {
+      food = getRandomPosition();
+    }
   }
 }
 
@@ -170,6 +205,7 @@ void loop() {
         moveSneic(input);
         orientation = input;
       }
+      eat();
       displaySneic();
     }
   }
