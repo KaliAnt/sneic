@@ -24,7 +24,7 @@ dot_t sneic[64];
 
 dot_t food;
 uint8_t orientation;
-uint8_t gamestatus = 0; //press any key for the game to start;
+uint8_t gamestatus; //press any key for the game to start;
 uint8_t sneicLen;
 unsigned long elapsedTime = millis();
 unsigned long previousTime;
@@ -92,7 +92,6 @@ dot_t getPosition(dot_t dot, uint8_t input) {
 void moveSneic() {
     int i = 0;
     if(eaten != 0) {
-      //sneic[sneicLen] = sneic[sneicLen-1]; //adds a body
       sneicLen++;
       eaten = 0;
     }
@@ -105,14 +104,22 @@ void moveSneic() {
 }
 
 
-dot_t check(dot_t dot) { //check collision with body
+bool check(dot_t dot) { //check collision with body
   int i = 0;
-  for(i = 0; i<sneicLen; i++) {
+  for(i = sneicLen-1; i>0; i--) {
     if((dot.x == sneic[i].x) && (dot.y == sneic[i].y)) { //collision
-      return sneic[i]; 
+      return true; 
     }
-    return dot;
   }
+  return false;
+}
+
+void checkGameOver() {
+
+  if(check(sneic[0])) {
+      gamestatus=0;
+  }
+  
 }
 
 void eat() {
@@ -122,15 +129,11 @@ void eat() {
     food = getRandomPosition(); //spawns new food
     dot_t tmp;
     while(1) {
-      tmp =check(food);
-      if((food.x == tmp.x) && (food.y == tmp.y)) break;
+      if((food.x == sneic[0].x) && (food.x == sneic[0].x)) food = getRandomPosition();
+      if(!check(food)) break;
       food = getRandomPosition();
     }
   }
-}
-
-void endGame() {
-  gamestatus = 0; //game has ended
 }
 
 uint8_t readInput() {
@@ -191,6 +194,7 @@ void setup() {
 
 void loop() {
   if(gamestatus == 0) {
+    ledMatrix.clear();
     pressAnyKey();//wait for player to start the game
     elapsedTime = 0;
     previousTime = 0;
@@ -199,6 +203,7 @@ void loop() {
     elapsedTime += currentTime - previousTime;
     if(elapsedTime > 500) {
       moveSneic();
+      checkGameOver();
       eat();
       displaySneic();
       elapsedTime = 0;
@@ -214,7 +219,7 @@ void loop() {
          // canread = false;
        }
     }
+    previousTime = currentTime;
   }
-  previousTime = currentTime;
   ledMatrix.display();
 }
